@@ -9,7 +9,7 @@ import { RainbowKitProvider, getDefaultConfig, darkTheme } from '@rainbow-me/rai
 import { mainnet, optimism, arbitrum, base, polygon } from 'wagmi/chains';
 import { http } from "viem";
 
-const config = getDefaultConfig({
+export const config = getDefaultConfig({
   appName: 'Tipping Live App',
   projectId: process.env.NEXT_PUBLIC_PROJECT_ID || "", // 你需要去 WalletConnect 建一個
   chains: [
