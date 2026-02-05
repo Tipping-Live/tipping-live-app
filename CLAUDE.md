@@ -51,6 +51,9 @@ Custom Tailwind theme in `tailwind.config.ts` with component classes in `globals
 Required in `.env.local`:
 ```
 NEXT_PUBLIC_PROJECT_ID          # WalletConnect project ID (required)
+NEXT_PUBLIC_SUPABASE_URL        # Supabase project URL (required)
+NEXT_PUBLIC_SUPABASE_ANON_KEY   # Supabase anonymous key (required, used by browser client & middleware for auth)
+SUPABASE_SERVICE_ROLE_KEY       # Supabase service role key (required, server-side only, bypasses RLS)
 ```
 
 Optional (for real channel settlement):
