@@ -1,0 +1,361 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Tipping Live API",
+    "description": "API for live stream tipping via Yellow Network state channels. Data is stored in a Supabase JSONB document store.",
+    "version": "0.1.0"
+  },
+  "servers": [
+    {
+      "url": "/api",
+      "description": "Local dev"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["System"],
+        "summary": "Health check",
+        "description": "Test Supabase database and auth connectivity.",
+        "responses": {
+          "200": {
+            "description": "Health status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "ok" },
+                    "supabase": {
+                      "type": "object",
+                      "properties": {
+                        "database": { "type": "string" },
+                        "auth": { "type": "string" }
+                      }
+                    },
+                    "timestamp": { "type": "string", "format": "date-time" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Get user profile",
+        "parameters": [
+          {
+            "name": "wallet",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "0x1234...abcd"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User profile (or null if not found)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "nullable": true,
+                      "$ref": "#/components/schemas/User"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Users"],
+        "summary": "Create or update user profile",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["wallet_address", "display_name"],
+                "properties": {
+                  "wallet_address": { "type": "string" },
+                  "display_name": { "type": "string" },
+                  "avatar_url": { "type": "string", "nullable": true }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Upserted user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": { "$ref": "#/components/schemas/User" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/streams": {
+      "get": {
+        "tags": ["Streams"],
+        "summary": "Get stream",
+        "description": "Fetch a single stream by ID (with streamer info), or the current live stream for a wallet.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "Stream UUID — returns stream + streamer info (for viewer page)"
+          },
+          {
+            "name": "wallet",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "Wallet address — returns the current live stream or null"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Stream data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "description": "When queried by id",
+                      "properties": {
+                        "stream": { "nullable": true, "$ref": "#/components/schemas/Stream" },
+                        "streamer": { "$ref": "#/components/schemas/User" }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "description": "When queried by wallet",
+                      "properties": {
+                        "stream": { "nullable": true, "$ref": "#/components/schemas/Stream" }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Streams"],
+        "summary": "Create a new live stream",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["streamer_wallet"],
+                "properties": {
+                  "streamer_wallet": { "type": "string" },
+                  "title": { "type": "string", "default": "Untitled Stream" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Created stream",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "stream": { "$ref": "#/components/schemas/Stream" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/streams/{id}/end": {
+      "post": {
+        "tags": ["Streams"],
+        "summary": "End a live stream",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["streamer_wallet"],
+                "properties": {
+                  "streamer_wallet": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ended stream",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "stream": { "$ref": "#/components/schemas/Stream" }
+                  }
+                }
+              }
+            }
+          },
+          "403": { "description": "Not the stream owner" },
+          "404": { "description": "Stream not found" }
+        }
+      }
+    },
+    "/tips": {
+      "get": {
+        "tags": ["Tips"],
+        "summary": "Get tips for a stream",
+        "parameters": [
+          {
+            "name": "stream_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tips list with aggregated totals",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "tips": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Tip" }
+                    },
+                    "totals": {
+                      "type": "object",
+                      "description": "Sum of amounts grouped by token",
+                      "additionalProperties": { "type": "number" }
+                    },
+                    "count": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Tips"],
+        "summary": "Record a tip",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["stream_id", "from_address", "to_address", "token", "amount"],
+                "properties": {
+                  "stream_id": { "type": "string", "format": "uuid" },
+                  "from_address": { "type": "string" },
+                  "to_address": { "type": "string" },
+                  "token": { "type": "string" },
+                  "amount": { "type": "string" },
+                  "memo": { "type": "string", "default": "" },
+                  "tx_type": { "type": "string", "default": "transfer" },
+                  "clearnode_tx_id": { "type": "integer", "nullable": true }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Recorded tip",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "tip": { "$ref": "#/components/schemas/Tip" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "wallet_address": { "type": "string" },
+          "display_name": { "type": "string" },
+          "avatar_url": { "type": "string", "nullable": true },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Stream": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "streamer_wallet": { "type": "string" },
+          "title": { "type": "string" },
+          "status": { "type": "string", "enum": ["live", "ended"] },
+          "started_at": { "type": "string", "format": "date-time" },
+          "ended_at": { "type": "string", "format": "date-time", "nullable": true },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Tip": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "stream_id": { "type": "string", "format": "uuid" },
+          "from_address": { "type": "string" },
+          "to_address": { "type": "string" },
+          "token": { "type": "string" },
+          "amount": { "type": "string" },
+          "memo": { "type": "string" },
+          "tx_type": { "type": "string" },
+          "clearnode_tx_id": { "type": "integer", "nullable": true },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      }
+    }
+  }
+}
