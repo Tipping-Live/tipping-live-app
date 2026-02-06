@@ -113,8 +113,8 @@
     "/streams": {
       "get": {
         "tags": ["Streams"],
-        "summary": "Get stream",
-        "description": "Fetch a single stream by ID (with streamer info), or the current live stream for a wallet.",
+        "summary": "Get stream(s)",
+        "description": "Fetch a single stream by ID (with streamer info), the current live stream for a wallet, or list all streams by status.",
         "parameters": [
           {
             "name": "id",
@@ -127,6 +127,12 @@
             "in": "query",
             "schema": { "type": "string" },
             "description": "Wallet address — returns the current live stream or null"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["live", "ended"] },
+            "description": "List all streams with this status — returns { streams: [...] } with streamer info"
           }
         ],
         "responses": {
@@ -149,6 +155,22 @@
                       "description": "When queried by wallet",
                       "properties": {
                         "stream": { "nullable": true, "$ref": "#/components/schemas/Stream" }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "description": "When queried by status",
+                      "properties": {
+                        "streams": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "stream": { "$ref": "#/components/schemas/Stream" },
+                              "streamer": { "$ref": "#/components/schemas/User" }
+                            }
+                          }
+                        }
                       }
                     }
                   ]
