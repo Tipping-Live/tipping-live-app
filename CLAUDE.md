@@ -19,7 +19,8 @@ This is a Next.js 14 App Router application for live stream tipping using Yellow
 - **wagmi + RainbowKit** for wallet connection (supports mainnet, Optimism, Arbitrum, Base, Polygon)
 - **viem** for Ethereum client operations
 - **@erc7824/nitrolite** for state channel operations via Yellow Network
-- **Supabase** for database (JSONB document store), authentication, and storage
+- **WebRTC** for P2P live video/audio streaming (host → viewers)
+- **Supabase** for database (JSONB document store), authentication, storage, and Realtime (signaling + chat)
 - **TailwindCSS** with custom dark theme
 - **swagger-ui-react** for API documentation at `/api-docs`
 
@@ -32,9 +33,9 @@ This is a Next.js 14 App Router application for live stream tipping using Yellow
 ### Key Directories
 - `/app` - Next.js pages (landing, browse, host, stream, api-docs) and providers. Root (`/`) redirects to `/landing`
 - `/app/api` - API routes (health, users, streams, streams/[id]/end, tips)
-- `/components` - UI components (LiveStream, TipPanel, TipPanelV2) and `/ui` subdir for reusable primitives
-- `/components/host` - Host dashboard components (ProfileSetupForm, StreamControlPanel, HostDashboard, StreamStatusPanel, TipsDashboard, TipFeed)
-- `/hooks` - React Query hooks (`useStreamerInfo`, `useBalanceOf`, `useUserProfile`, `useHostStream`, `useStreamTips`)
+- `/components` - UI components (LiveStream, VideoPlayer, ChatPanel, ViewerSidePanel, TipPanel, TipPanelV2) and `/ui` subdir for reusable primitives
+- `/components/host` - Host dashboard components (ProfileSetupForm, StreamControlPanel, HostDashboard, HostVideoPreview, StreamStatusPanel, TipsDashboard, TipFeed)
+- `/hooks` - React hooks for data fetching (`useStreamerInfo`, `useBalanceOf`, `useUserProfile`, `useHostStream`, `useStreamTips`, `useLiveStreams`), WebRTC (`useMediaStream`, `useWebRTCHost`, `useWebRTCViewer`), and chat (`useStreamChat`)
 - `/lib/nitrolite` - State channel integration (types, config, useNitrolite for viewer, useHostNitrolite for host)
 - `/lib/supabase` - Supabase client configuration (browser client, server client, middleware)
 - `/lib/swagger` - OpenAPI spec (`openapi.json`)
@@ -78,11 +79,44 @@ The `useHostNitrolite` hook (`/lib/nitrolite/useHostNitrolite.ts`) handles host-
 
 Status state machine (both hooks): `idle → ws_connecting → ws_connected → auth_requested → auth_challenged → auth_verified`
 
+### WebRTC P2P Streaming
+- **Architecture**: Host captures webcam/mic via `getUserMedia`, creates `RTCPeerConnection` per viewer
+- **Signaling**: Supabase Realtime broadcast channel `stream-signal:{streamId}` (no extra server)
+- **STUN**: Google's free STUN servers (`stun.l.google.com`)
+- **Scalability**: ~5-10 concurrent viewers (MVP)
+
+**Signaling protocol** (all via Supabase Realtime broadcast):
+
+| Event | Direction | Payload |
+|---|---|---|
+| `viewer-join` | Viewer → Host | `{ viewerId }` |
+| `offer` | Host → Viewer | `{ viewerId, sdp }` |
+| `answer` | Viewer → Host | `{ viewerId, sdp }` |
+| `ice-candidate` | Both | `{ viewerId, candidate, sender }` |
+| `stream-ended` | Host → All | `{}` |
+
+**Key hooks**:
+- `useMediaStream` — Webcam/mic capture via `getUserMedia`. Returns `stream`, `startCapture()`, `stopCapture()`, `videoRef`, `error`. Cleans up tracks on unmount.
+- `useWebRTCHost` — Host-side. Maintains `Map<viewerId, RTCPeerConnection>`. Creates peer per viewer, manages SDP/ICE exchange, tracks `viewerCount`, broadcasts `stream-ended` on cleanup.
+- `useWebRTCViewer` — Viewer-side. Sends `viewer-join`, handles offer/answer/ICE. Auto-retries up to 3 times on disconnect. Handles autoplay policy: lets `autoPlay` attempt unmuted playback, falls back to muted + unmute button if browser blocks it.
+
+**Autoplay policy handling**: The viewer uses `autoPlay` on the `<video>` element. If the browser blocks unmuted autoplay (e.g. direct URL visit without prior interaction), `ensurePlayback()` detects `video.paused` after 500ms and falls back to muted playback with an unmute button. From `/browse` navigation (user click), autoplay with sound works natively.
+
+### Live Chat
+- **Channel**: Supabase Realtime broadcast `stream-chat:{streamId}` with `{ self: true }`
+- **Ephemeral**: No DB persistence, messages only exist in-memory (capped at 200)
+- **Hook**: `useStreamChat(streamId, senderName, senderAddress)` → `messages[]`, `sendMessage()`, `isConnected`
+- **UI**: `ViewerSidePanel` provides Chat/Tips tab toggle on the viewer page. `ChatPanel` renders messages with auto-scroll.
+
 ### Host Page (`/host`) State Machine
 1. **Not connected** → Show ConnectButton prompt
 2. **Connected, no profile** → `ProfileSetupForm`
 3. **Connected, has profile, no live stream** → `StreamControlPanel`
-4. **Connected, has profile, live stream** → `HostDashboard` (auto-connects WebSocket, receives tips)
+4. **Connected, has profile, live stream** → `HostDashboard` (auto-starts camera, connects WebRTC + WebSocket, receives tips)
+
+### Viewer Page (`/stream`) Layout
+- Left column (7/12): `LiveStream` with `VideoPlayer` (WebRTC video), connection state overlay, unmute button
+- Right column (5/12): `ViewerSidePanel` with Chat/Tips tab toggle
 
 ### Styling
 Custom Tailwind theme in `tailwind.config.ts` with component classes in `globals.css`:
