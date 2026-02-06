@@ -5,6 +5,7 @@ const COLLECTION = 'streams'
 
 // GET /api/streams?id=<uuid>       - single stream with user info (for viewer page)
 // GET /api/streams?wallet=0x...    - current live stream for this wallet (single or null)
+// GET /api/streams?status=live     - all streams with given status (with streamer info)
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient()
@@ -46,10 +47,51 @@ export async function GET(request: NextRequest) {
       })
     }
 
+    // List streams by status (e.g. ?status=live)
+    const status = params.get('status')
+    if (status) {
+      const { data: streams, error } = await supabase
+        .from('documents')
+        .select('*')
+        .eq('collection', COLLECTION)
+        .eq('data->>status', status)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+
+      // Batch-fetch streamer profiles for all unique wallets
+      const wallets = [...new Set(
+        (streams ?? []).map((s) => (s.data as Record<string, unknown>).streamer_wallet as string)
+      )]
+
+      const { data: users } = wallets.length > 0
+        ? await supabase
+            .from('documents')
+            .select('*')
+            .eq('collection', 'users')
+            .in('id', wallets)
+        : { data: [] }
+
+      const userMap = new Map(
+        (users ?? []).map((u) => [u.id, { wallet_address: u.id, ...(u.data as Record<string, unknown>) }])
+      )
+
+      const result = (streams ?? []).map((s) => {
+        const streamData = s.data as Record<string, unknown>
+        const wallet = streamData.streamer_wallet as string
+        return {
+          stream: { id: s.id, ...streamData, created_at: s.created_at },
+          streamer: userMap.get(wallet) ?? { wallet_address: wallet, display_name: wallet.slice(0, 8) },
+        }
+      })
+
+      return NextResponse.json({ streams: result })
+    }
+
     // Current live stream by wallet (single)
     const wallet = params.get('wallet')
     if (!wallet) {
-      return NextResponse.json({ error: 'wallet or id parameter is required' }, { status: 400 })
+      return NextResponse.json({ error: 'id, wallet, or status parameter is required' }, { status: 400 })
     }
 
     const { data, error } = await supabase
