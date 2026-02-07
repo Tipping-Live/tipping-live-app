@@ -6,7 +6,7 @@ import React from 'react';
 import { WagmiProvider } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RainbowKitProvider, getDefaultConfig, darkTheme } from '@rainbow-me/rainbowkit';
-import { mainnet, optimism, arbitrum, base, polygon } from 'wagmi/chains';
+import { mainnet, optimism, arbitrum, base, polygon, sepolia } from 'wagmi/chains';
 import { http } from "viem";
 
 export const config = getDefaultConfig({
@@ -17,7 +17,8 @@ export const config = getDefaultConfig({
     optimism,
     arbitrum,
     base,
-    polygon
+    polygon,
+    sepolia
   ],
   ssr: true,
   multiInjectedProviderDiscovery: false,
@@ -26,7 +27,8 @@ export const config = getDefaultConfig({
     [optimism.id]: http(),
     [arbitrum.id]: http(),
     [base.id]: http(),
-    [polygon.id]: http()
+    [polygon.id]: http(),
+    [sepolia.id]: http()
   }
 });
 
