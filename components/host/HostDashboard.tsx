@@ -3,8 +3,11 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useHostNitrolite } from '@/lib/nitrolite/useHostNitrolite'
 import { useStreamTips } from '@/hooks/useStreamTips'
+import { useMediaStream } from '@/hooks/useMediaStream'
+import { useWebRTCHost } from '@/hooks/useWebRTCHost'
 import StreamStatusPanel from './StreamStatusPanel'
 import TipsDashboard from './TipsDashboard'
+import HostVideoPreview from './HostVideoPreview'
 import type { RPCTransaction } from '@erc7824/nitrolite'
 
 interface Stream {
@@ -25,7 +28,18 @@ interface Props {
 export default function HostDashboard({ stream, wallet, onEndStream, isEnding }: Props) {
   const nitro = useHostNitrolite()
   const { data: dbTips } = useStreamTips(stream.id)
+  const media = useMediaStream()
+  const webrtcHost = useWebRTCHost(stream.id, media.stream)
   const hasConnectedRef = useRef(false)
+  const hasStartedCaptureRef = useRef(false)
+
+  // Auto-start camera capture on mount
+  useEffect(() => {
+    if (!hasStartedCaptureRef.current) {
+      hasStartedCaptureRef.current = true
+      media.startCapture()
+    }
+  }, [])
 
   // Auto-connect WebSocket and run auth flow
   useEffect(() => {
@@ -115,14 +129,27 @@ export default function HostDashboard({ stream, wallet, onEndStream, isEnding }:
     return result
   }, [mergedTips, dbTips?.totals])
 
+  const handleEndStream = useCallback(() => {
+    webrtcHost.cleanup()
+    media.stopCapture()
+    onEndStream()
+  }, [webrtcHost, media, onEndStream])
+
   return (
     <div className="grid gap-4 lg:grid-cols-12">
-      <div className="lg:col-span-7">
+      <div className="lg:col-span-7 grid gap-4">
+        <HostVideoPreview
+          videoRef={media.videoRef}
+          hasStream={!!media.stream}
+          error={media.error}
+          viewerCount={webrtcHost.viewerCount}
+        />
         <StreamStatusPanel
           stream={stream}
           wsStatus={nitro.status}
-          onEndStream={onEndStream}
+          onEndStream={handleEndStream}
           isEnding={isEnding}
+          viewerCount={webrtcHost.viewerCount}
         />
       </div>
 

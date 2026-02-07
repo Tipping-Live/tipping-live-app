@@ -15,9 +15,10 @@ interface Props {
   wsStatus: NitroliteStatus
   onEndStream: () => void
   isEnding: boolean
+  viewerCount?: number
 }
 
-export default function StreamStatusPanel({ stream, wsStatus, onEndStream, isEnding }: Props) {
+export default function StreamStatusPanel({ stream, wsStatus, onEndStream, isEnding, viewerCount = 0 }: Props) {
   const [copied, setCopied] = useState(false)
   const viewerUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/stream?stream_id=${stream.id}`
 
@@ -35,6 +36,9 @@ export default function StreamStatusPanel({ stream, wsStatus, onEndStream, isEnd
             <span className="inline-flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-500/10 px-2.5 py-0.5 text-xs text-red-300">
               <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
               LIVE
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-xs text-white/60">
+              {viewerCount} viewer{viewerCount !== 1 ? 's' : ''}
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-xs text-white/60">
               WS: {wsStatus}
