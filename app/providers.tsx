@@ -5,29 +5,19 @@ import '@rainbow-me/rainbowkit/styles.css';
 import React from 'react';
 import { WagmiProvider } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { RainbowKitProvider, getDefaultConfig, darkTheme } from '@rainbow-me/rainbowkit';
-import { mainnet, optimism, arbitrum, base, polygon, sepolia } from 'wagmi/chains';
+import { RainbowKitProvider, getDefaultConfig, lightTheme } from '@rainbow-me/rainbowkit';
+import { sepolia } from 'wagmi/chains';
 import { http } from "viem";
 
 export const config = getDefaultConfig({
-  appName: 'Tipping Live App',
+  appName: 'EveryAid App',
   projectId: process.env.NEXT_PUBLIC_PROJECT_ID || "", // 你需要去 WalletConnect 建一個
   chains: [
-    mainnet,
-    optimism,
-    arbitrum,
-    base,
-    polygon,
     sepolia
   ],
   ssr: true,
   multiInjectedProviderDiscovery: false,
   transports: {
-    [mainnet.id]: http(),
-    [optimism.id]: http(),
-    [arbitrum.id]: http(),
-    [base.id]: http(),
-    [polygon.id]: http(),
     [sepolia.id]: http()
   }
 });
@@ -40,13 +30,18 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider 
           locale="en-US"
-          theme={darkTheme({
-            accentColor: '#7C3AED',
-            accentColorForeground: '#FFFFFF',
-            borderRadius: 'medium',
-            fontStack: 'system',
-            overlayBlur: 'small',
-          })} modalSize='compact'
+          theme={lightTheme({
+            // match your light UI + logo palette
+            accentColor: "#E1A2FA", // primary (coral)
+            accentColorForeground: "#FFFFFF",
+        
+            borderRadius: "large",
+            fontStack: "system",
+            overlayBlur: "small",
+        
+            // keep it airy + readable on light bg
+          })}
+          modalSize='compact'
         >
           {children}
         </RainbowKitProvider>

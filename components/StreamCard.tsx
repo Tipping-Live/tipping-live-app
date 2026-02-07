@@ -26,31 +26,38 @@ export default function StreamCard({ id, title, streamerName, streamerAvatar, st
   return (
     <Link
       href={`/stream?stream_id=${id}`}
-      className="panel block overflow-hidden transition hover:border-violet-600/40"
+      className="group block overflow-hidden rounded-2xl border border-border bg-panel shadow-panel backdrop-blur transition hover:border-border2 hover:shadow-glow"
     >
       {/* Thumbnail placeholder */}
-      <div className="flex aspect-video items-center justify-center bg-white/5">
-        <span className="text-xs font-semibold tracking-widest text-white/20">LIVE</span>
+      <div className="flex aspect-video items-center justify-center bg-brand-soft">
+        <span className="text-xs font-semibold tracking-widest text-muted">LIVE</span>
       </div>
 
       {/* Stream info */}
       <div className="p-4">
-        <h3 className="text-sm font-extrabold truncate">{title}</h3>
+        <h3 className="text-sm font-extrabold text-text truncate">{title}</h3>
 
-        <div className="mt-3 flex items-center justify-between">
+        <div className="mt-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0">
-            <div className="h-6 w-6 shrink-0 rounded-full bg-violet-600/30 flex items-center justify-center text-[10px] font-bold text-violet-300 overflow-hidden">
-              {streamerAvatar
-                ? <img src={streamerAvatar} alt="" className="h-full w-full object-cover" />
-                : streamerName.charAt(0).toUpperCase()}
+            <div className="h-6 w-6 shrink-0 overflow-hidden rounded-full border border-border bg-white flex items-center justify-center text-[10px] font-bold text-text">
+              {streamerAvatar ? (
+                <img
+                  src={streamerAvatar}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                streamerName.charAt(0).toUpperCase()
+              )}
             </div>
-            <span className="text-xs text-white/60 truncate">{streamerName}</span>
+
+            <span className="text-xs text-muted truncate">{streamerName}</span>
           </div>
 
           <Badge label="" value="LIVE" tone="success" />
         </div>
 
-        <div className="mt-2 text-[10px] text-white/40">{elapsed}</div>
+        <div className="mt-2 text-[10px] text-subtle">{elapsed}</div>
       </div>
     </Link>
   )

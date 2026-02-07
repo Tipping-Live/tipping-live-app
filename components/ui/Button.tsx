@@ -5,24 +5,31 @@ export default function Button({
   onClick,
   disabled,
   variant = "primary",
+  type = "button",
 }: {
   children: React.ReactNode;
   onClick?: () => void;
   disabled?: boolean;
   variant?: "primary" | "secondary" | "danger";
+  type?: "button" | "submit" | "reset";
 }) {
   const base =
-    "inline-flex items-center justify-center rounded-xl px-3 py-2 text-sm font-semibold transition active:translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-60";
+    "inline-flex items-center justify-center rounded-xl px-3 py-2 text-sm font-semibold transition active:translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-bg";
 
   const styles =
     variant === "primary"
-      ? "text-white bg-violet-600 hover:bg-violet-700 border border-white/10"
+      ? "bg-primary text-white shadow-glow hover:opacity-90 border border-transparent"
       : variant === "danger"
-      ? "text-red-200 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30"
-      : "text-white/90 bg-white/5 hover:bg-white/10 border border-white/10";
+      ? "bg-danger text-white shadow-sm hover:opacity-90 border border-transparent"
+      : "bg-panel2 text-text border border-border shadow-sm hover:border-border2";
 
   return (
-    <button className={`${base} ${styles}`} onClick={onClick} disabled={disabled}>
+    <button
+      type={type}
+      className={`${base} ${styles}`}
+      onClick={onClick}
+      disabled={disabled}
+    >
       {children}
     </button>
   );

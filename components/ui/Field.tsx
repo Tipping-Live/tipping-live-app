@@ -15,9 +15,12 @@ export default function Field({
 }) {
   return (
     <label className="grid gap-2">
-      <div className="text-xs text-white/60">{label}</div>
+      <div className="text-xs text-muted">{label}</div>
       <input
-        className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none placeholder:text-white/30 focus:ring-2 focus:ring-violet-500/40"
+        className="w-full rounded-xl border border-border bg-panel2 px-3 py-2 text-sm text-text outline-none
+                   placeholder:text-subtle shadow-sm
+                   focus:border-border2 focus:ring-2 focus:ring-ring
+                   read-only:bg-white/70 read-only:text-muted"
         value={value}
         placeholder={placeholder}
         onChange={(e) => onChange?.(e.target.value)}
