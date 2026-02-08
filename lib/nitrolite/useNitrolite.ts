@@ -107,7 +107,7 @@ export function useNitrolite() {
         adjudicator: ADJUDICATOR_CONTRACT,
       },
       chainId: CHAIN_ID,
-      challengeDuration: 3600n, // 1 hour minimum
+      // challengeDuration: 3600n, // 1 hour minimum FIXME: build error (BigInt literals are not available when targeting lower than ES2020)
     };
     return {
       publicClient: publicClient as PublicClient,

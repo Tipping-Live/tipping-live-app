@@ -46,7 +46,6 @@ export default function TipPanel() {
     lastError,
     connectWs,
     disconnectWs,
-    requestAuth,
     verifyAuth,
     sendTip,
   } = useNitrolite();
