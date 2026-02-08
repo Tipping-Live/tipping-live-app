@@ -30,6 +30,8 @@ import {
   CreateChannelResponse,
 } from "@erc7824/nitrolite";
 
+import { handleResizeChannel } from "./handleResizeChannel";
+
 import {
   ADJUDICATOR_CONTRACT,
   CHAIN_ID,
@@ -84,6 +86,11 @@ export function useNitrolite() {
     destination: `0x${string}`;
     allocations: Array<{ asset: string; amount: string }>;
   } | null>(null);
+  const [channels, setChannels] = useState<any[]>([]);
+  const [closeData, setCloseData] = useState<{
+    finalState: any;
+    stateData: any;
+  } | null>(null);
 
   const canWork = Boolean(
     isConnected && address && walletClient && publicClient,
@@ -132,8 +139,14 @@ export function useNitrolite() {
   const connectWs = useCallback(() => {
     if (!canWork) throw new Error("Wallet not ready");
 
+    console.log("🔌 Starting WebSocket connection...");
+    console.log("WebSocket URL:", CLEARNODE_WS);
+    console.log("CLEARNODE_WS defined:", typeof CLEARNODE_WS, CLEARNODE_WS);
+    console.log("Current status:", status);
+
     // 總是關閉現有連接並重置狀態
     if (wsRef.current) {
+      console.log("Closing existing WebSocket connection");
       wsRef.current.close();
       wsRef.current = null;
     }
@@ -141,132 +154,234 @@ export function useNitrolite() {
     setStatus("ws_connecting");
     setLastError(null);
 
-    const ws = new WebSocket(CLEARNODE_WS);
-    wsRef.current = ws;
+    try {
+      const ws = new WebSocket(CLEARNODE_WS);
+      console.log("WebSocket instance created:", !!ws);
+      wsRef.current = ws;
 
-    ws.onopen = () => {
-      console.log("✅ Connected to Yellow Network!");
-      setStatus("ws_connected");
-    };
+      ws.onopen = () => {
+        console.log("✅ Connected to Yellow Network!");
+        console.log("WebSocket readyState:", ws.readyState);
+        console.log("wsRef.current is set:", !!wsRef.current);
+        setStatus("ws_connected");
+      };
 
-    ws.onerror = (error) => {
-      console.error("Connection error:", error);
+      ws.onerror = (error) => {
+        console.error("❌ WebSocket connection error:", error);
+        console.log("WebSocket readyState on error:", ws.readyState);
+        console.log("Error details:", error);
+        setStatus("error");
+        setLastError("WebSocket connection failed");
+      };
 
-      setStatus("error");
-      setLastError("WebSocket error");
-    };
+      ws.onclose = (event) => {
+        console.log("🔌 WebSocket closed:", {
+          code: event.code,
+          reason: event.reason,
+          wasClean: event.wasClean
+        });
+        console.log("wsRef.current before null:", !!wsRef.current);
+        wsRef.current = null;
+        setStatus("idle");
+      };
 
-    ws.onclose = () => {
-      wsRef.current = null;
-      setStatus("idle");
-    };
-
-    ws.onmessage = (evt) => {
-      try {
-        const rpcResponse = parseAnyRPCResponse(String(evt.data));
-        console.log("Parsed RPC Response:", rpcResponse);
-
-        // 一開始連線會取得資產列表，找出 ytest.usd 的 token address 並存起來
-        if (rpcResponse.method === RPCMethod.Assets) {
-          const assets: RPCAsset[] = rpcResponse.params.assets;
-
-          // 找出 ytest.usd: chainId=11155111 或 59141, symbol=ytest.usd, decimals=6
-          const ytestAsset = assets.find(
-            (asset) =>
-              (asset.chainId === 11155111 || asset.chainId === 59141) &&
-              asset.symbol === "ytest.usd" &&
-              asset.decimals === 6,
-          );
-
-          if (ytestAsset) {
-            setYtestUsdToken(ytestAsset.token as `0x${string}`);
-            console.log("Found ytest.usd token:", ytestAsset.token);
-          } else {
-            console.warn("ytest.usd asset not found in assets response");
-          }
-
-          console.log("Received assets response:", rpcResponse.params);
-          return;
-        }
-
-        if (rpcResponse.method === RPCMethod.AuthChallenge) {
-          console.log("Received auth challenge:", rpcResponse.params);
-          const challengeMessage = rpcResponse.params.challengeMessage;
-          console.log("Challenge message for signing:", challengeMessage);
-          setChallenge(challengeMessage);
-          setStatus("auth_challenged");
-          return;
-        }
-
-        // 處理特定訊息
-        if (rpcResponse.method === RPCMethod.BalanceUpdate) {
-          let data: BalanceUpdateResponse = parseBalanceUpdateResponse(
-            evt.data,
-          );
-          console.log("Balance update data:", data.params.balanceUpdates);
-          const balanceUpdates: RPCBalance[] = data.params.balanceUpdates;
-          // 找出 ytest.usd
-          const ytestUpdate = balanceUpdates.find(
-            (update) => update.asset === "ytest.usd",
-          );
-          if (ytestUpdate) {
-            setYtestUsdBalance(ytestUpdate.amount);
-          }
-          // 可以添加狀態來存儲 balance updates
-        }
-
-        if (rpcResponse.method === RPCMethod.CreateChannel) {
-          console.log("CreateChannel response:", rpcResponse.params);
-          const { channel, state, serverSignature, channelId } =
-            rpcResponse.params as CreateChannelResponse["params"];
-          // unsignedInitialState 從 state 中提取
-          setChannelData({
-            channel,
-            unsignedInitialState: {
-              intent: state.intent,
-              version: state.version,
-              data: state.stateData,
-              allocations: state.allocations,
-            },
-            serverSignature,
-            channelId: channelId as `0x${string}`,
-          });
-          setStatus("channel_created");
-        }
-
-        if (rpcResponse.method === RPCMethod.GetChannels) {
-          console.log("GetChannels response:", rpcResponse.params);
-          // 可以在這裡處理頻道列表，例如存到狀態中
-        }
-
-        if (rpcResponse.method === RPCMethod.ResizeChannel) {
-          console.log("ResizeChannel response:", rpcResponse.params);
-          const { resizeState, proofStates } = rpcResponse.params as any;
-          setResizeData({ resizeState, proofStates });
-          setStatus("channel_resized");
-        }
-
-        if (rpcResponse.method === RPCMethod.Transfer) {
-          console.log("Transfer response:", rpcResponse.params);
-          // 假設響應包含成功信息
-          setStatus("transferred");
-        }
-
-        if (rpcResponse.method === RPCMethod.Error) {
-          console.error("RPC Error:", rpcResponse.params?.error);
+      // 添加連接超時檢查
+      setTimeout(() => {
+        if (ws.readyState === WebSocket.CONNECTING) {
+          console.log("⏰ WebSocket connection timeout");
+          ws.close();
           setStatus("error");
-          setLastError(rpcResponse.params?.error || "RPC error");
+          setLastError("WebSocket connection timeout");
+        }
+      }, 10000); // 10秒超時
+
+      ws.onmessage = async (evt) => {
+        try {
+          const rpcResponse = parseAnyRPCResponse(String(evt.data));
+          console.log("Parsed RPC Response:", rpcResponse);
+
+          // 一開始連線會取得資產列表，找出 ytest.usd 的 token address 並存起來
+          if (rpcResponse.method === RPCMethod.Assets) {
+            const assets: RPCAsset[] = rpcResponse.params.assets;
+
+            // 找出 ytest.usd: chainId=11155111 或 59141, symbol=ytest.usd, decimals=6
+            const ytestAsset = assets.find(
+              (asset) =>
+                (asset.chainId === 11155111 || asset.chainId === 59141) &&
+                asset.symbol === "ytest.usd" &&
+                asset.decimals === 6,
+            );
+
+            if (ytestAsset) {
+              setYtestUsdToken(ytestAsset.token as `0x${string}`);
+              console.log("Found ytest.usd token:", ytestAsset.token);
+            } else {
+              console.warn("ytest.usd asset not found in assets response");
+            }
+
+            console.log("Received assets response:", rpcResponse.params);
+            return;
+          }
+
+          if (rpcResponse.method === RPCMethod.AuthChallenge) {
+            console.log("Received auth challenge:", rpcResponse.params);
+            const challengeMessage = rpcResponse.params.challengeMessage;
+            console.log("Challenge message for signing:", challengeMessage);
+            setChallenge(challengeMessage);
+            setStatus("auth_challenged");
+            return;
+          }
+
+          // 處理特定訊息
+          if (rpcResponse.method === RPCMethod.BalanceUpdate) {
+            let data: BalanceUpdateResponse = parseBalanceUpdateResponse(
+              evt.data,
+            );
+            console.log("Balance update data:", data.params.balanceUpdates);
+            const balanceUpdates: RPCBalance[] = data.params.balanceUpdates;
+            // 找出 ytest.usd
+            const ytestUpdate = balanceUpdates.find(
+              (update) => update.asset === "ytest.usd",
+            );
+            if (ytestUpdate) {
+              setYtestUsdBalance(ytestUpdate.amount);
+            }
+            // 可以添加狀態來存儲 balance updates
+          }
+
+          if (rpcResponse.method === RPCMethod.CreateChannel) {
+            console.log("CreateChannel response:", rpcResponse.params);
+            const { channel, state, serverSignature, channelId } =
+              rpcResponse.params as CreateChannelResponse["params"];
+            // unsignedInitialState 從 state 中提取
+            setChannelData({
+              channel,
+              unsignedInitialState: {
+                intent: state.intent,
+                version: state.version,
+                data: state.stateData,
+                allocations: state.allocations,
+              },
+              serverSignature,
+              channelId: channelId as `0x${string}`,
+            });
+            setStatus("channel_created");
+          }
+
+          if (rpcResponse.method === RPCMethod.GetChannels) {
+            console.log("GetChannels response:", rpcResponse.params);
+            const channelsList = rpcResponse.params.channels || [];
+            setChannels(channelsList);
+            console.log("Stored channels:", channelsList);
+          }
+
+          if (rpcResponse.method === RPCMethod.ResizeChannel) {
+            console.log("ResizeChannel response:", rpcResponse.params);
+            // Assuming params has channel_id, state, server_signature
+            const params = rpcResponse.params as any;
+            if (nitroliteDeps && sessionPrivateKey && wsRef.current && address) {
+              const sessionSigner = createECDSAMessageSigner(sessionPrivateKey);
+              handleResizeChannel(
+                params,
+                nitroliteDeps.client,
+                nitroliteDeps.publicClient,
+                sessionSigner,
+                wsRef.current,
+                { address: address as `0x${string}` },
+              ).catch((error) => {
+                console.error("Error handling resize channel:", error);
+                setStatus("error");
+                setLastError("Resize channel handling failed");
+              });
+            } else {
+              // Fallback to simple handling
+              const { resizeState, proofStates } = params;
+              setResizeData({ resizeState, proofStates });
+              setStatus("channel_resized");
+            }
+          }
+
+          if (rpcResponse.method === RPCMethod.Transfer) {
+            console.log("Transfer response:", rpcResponse.params);
+            // 假設響應包含成功信息
+            setStatus("transferred");
+          }
+
+          if (rpcResponse.method === RPCMethod.CloseChannel) {
+            console.log("CloseChannel response:", rpcResponse.params);
+            const { channelId, state, serverSignature } = rpcResponse.params;
+            console.log(`✓ Node signed close for ${channelId}`);
+            const finalState = {
+              intent: state.intent,
+              version: BigInt(state.version),
+              data: state.stateData,
+              allocations: state.allocations.map((a: any) => ({
+                destination: a.destination,
+                token: a.token,
+                amount: BigInt(a.amount),
+              })),
+              channelId: channelId,
+              serverSignature: serverSignature,
+            };
+            try {
+              console.log(`  Submitting close to L1 for ${channelId}...`);
+
+              if (!nitroliteDeps) {
+                console.error(
+                  "Nitrolite client not available for closing channel",
+                );
+                return;
+              }
+
+              const txHash = await nitroliteDeps.client.closeChannel({
+                finalState,
+                stateData: finalState.data,
+              });
+              console.log(`✓ Closed on-chain: ${txHash}`);
+            } catch (e) {
+              // If it fails (e.g. already closed or race condition), just log and continue
+              console.error(`Failed to close ${channelId} on-chain:`, e);
+            }
+            setStatus("channel_closed");
+          }
+
+          if (rpcResponse.method === RPCMethod.Error) {
+            const errorMsg = rpcResponse.params?.error || "RPC error";
+            console.error("RPC Error:", errorMsg);
+
+            // Check if it's a resize already ongoing error
+            const resizeOngoingMatch = errorMsg.match(
+              /resize already ongoing.*channel (0x[a-fA-F0-9]+)/,
+            );
+            if (resizeOngoingMatch) {
+              const channelId = resizeOngoingMatch[1] as `0x${string}`;
+              console.log(
+                `Detected ongoing resize for channel ${channelId}, attempting to complete...`,
+              );
+              checkAndCompletePendingResize(channelId).catch((err) => {
+                console.error("Failed to complete pending resize:", err);
+              });
+            }
+
+            setStatus("error");
+            setLastError(errorMsg);
+            return;
+          }
+
+          return;
+        } catch (error) {
+          console.error("Failed to parse RPC response:", error);
+          setLastError("Invalid RPC response format");
           return;
         }
+      };
 
-        return;
-      } catch (error) {
-        console.error("Failed to parse RPC response:", error);
-        setLastError("Invalid RPC response format");
-        return;
-      }
-    };
-  }, [canWork]);
+    } catch (error) {
+      console.error("❌ Failed to create WebSocket:", error);
+      setStatus("error");
+      setLastError("Failed to create WebSocket connection");
+    }
+  }, [canWork, status]);
 
   const disconnectWs = useCallback(() => {
     wsRef.current?.close();
@@ -395,7 +510,7 @@ export function useNitrolite() {
     setStatus("channel_creating");
   }, [sessionPrivateKey, ytestUsdToken]);
 
-  // Resize channel
+  // Resize channel 送出 resize 請求給 server，server 會回新的 state 和 proof，然後你要簽名並送出 confirm message
   const resizeChannel = useCallback(
     async (params: {
       channelId: string;
@@ -478,39 +593,45 @@ export function useNitrolite() {
     [sessionPrivateKey],
   );
 
-  // Close channel
-  const closeChannel = useCallback(
-    async (channelId: `0x${string}`, fundsDestination: `0x${string}`) => {
-      if (
-        !sessionPrivateKey ||
-        !wsRef.current ||
-        wsRef.current.readyState !== WebSocket.OPEN
-      )
-        throw new Error("Session not ready");
+  // Submit close to chain
+  const submitClose = useCallback(async () => {
+    if (!closeData || !nitroliteDeps) throw new Error("No close data");
 
-      const messageSigner = createECDSAMessageSigner(sessionPrivateKey);
+    await nitroliteDeps.client.closeChannel(closeData);
 
-      const closeMsg = await createCloseChannelMessage(
-        messageSigner,
-        channelId,
-        fundsDestination,
+    console.log("Close submitted to chain");
+    setStatus("close_submitted");
+  }, [closeData, nitroliteDeps]);
+
+  // Withdraw from Custody Contract to Wallet
+  const withdrawFunds = useCallback(
+    async (tokenAddress: `0x${string}`, withdrawableBalance: bigint) => {
+      if (!nitroliteDeps) throw new Error("Client not ready");
+
+      const withdrawalTx = await nitroliteDeps.client.withdrawal(
+        tokenAddress,
+        withdrawableBalance,
       );
-
-      wsRef.current.send(closeMsg);
-      console.log("Channel close message sent");
+      console.log("Funds withdrawn:", withdrawalTx);
+      setStatus("withdrawn");
     },
-    [sessionPrivateKey],
+    [nitroliteDeps],
   );
 
   // Get channels
-  const getChannels = useCallback(
+  const sendGetChannelsMsgToWS = useCallback(
     async (participant?: `0x${string}`, status?: any) => {
       if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN)
         throw new Error("WS not connected");
       const msg = createGetChannelsMessageV2(participant || address, status);
+
+      if (nitroliteDeps) {
+        const openChannelsL1 = await nitroliteDeps.client.getOpenChannels();
+        console.log("Open channels from chain:", openChannelsL1);
+      }
       wsRef.current.send(msg);
     },
-    [address],
+    [address, nitroliteDeps],
   );
 
   const getChannelData = useCallback(
@@ -531,6 +652,84 @@ export function useNitrolite() {
     wsRef.current.send(msg);
   }, []);
 
+  // Check and complete pending resize for a specific channel
+  const checkAndCompletePendingResize = useCallback(
+    async (channelId: `0x${string}`) => {
+      if (!nitroliteDeps) throw new Error("Nitrolite client not ready");
+
+      try {
+        console.log(`Checking for pending resize data...`);
+
+        // If we have resizeData from a previous response, try to submit it
+        if (resizeData) {
+          console.log("Found existing resizeData, attempting to submit...");
+          await nitroliteDeps.client.resizeChannel(resizeData);
+          console.log("✓ Pending resize submitted to chain");
+          setStatus("resize_submitted");
+          setResizeData(null); // Clear after submission
+        } else {
+          console.log(
+            "No pending resize data found. You may need to initiate a new resize.",
+          );
+        }
+      } catch (error) {
+        console.error("Error submitting pending resize:", error);
+        setStatus("error");
+        setLastError("Failed to submit pending resize");
+      }
+    },
+    [nitroliteDeps, resizeData],
+  );
+
+  ///////////// Client API Wrappers /////////////
+
+  // Submit close to chain
+  // const submitClose = useCallback(async () => {
+  //   if (!closeData || !nitroliteDeps) throw new Error("No close data");
+
+  //   await nitroliteDeps.client.closeChannel(closeData);
+
+  //   console.log("Close submitted to chain");
+  //   setStatus("close_submitted");
+  // }, [closeData, nitroliteDeps]);
+
+  ///////////// Send To WS 的 API /////////////
+  // Close channel
+  const sendCloseChannelMsgToWS = useCallback(
+    async (channelId: `0x${string}`, participantAddress?: `0x${string}`) => {
+      console.log("sendCloseChannelMsgToWS called with:", {
+        sessionPrivateKey: !!sessionPrivateKey,
+        wsRef: !!wsRef.current,
+        wsReadyState: wsRef.current?.readyState,
+        address: !!address,
+        status,
+      });
+
+      if (
+        !sessionPrivateKey ||
+        !wsRef.current ||
+        wsRef.current.readyState !== WebSocket.OPEN ||
+        !address
+      )
+        throw new Error(
+          `Session not ready. Status: ${status}, WS ReadyState: ${wsRef.current?.readyState}`,
+        );
+
+      const messageSigner = createECDSAMessageSigner(sessionPrivateKey);
+
+      const closeMsg = await createCloseChannelMessage(
+        messageSigner,
+        channelId,
+        participantAddress || (address as `0x${string}`),
+      );
+
+      wsRef.current.send(closeMsg);
+      console.log("Channel close message sent");
+      setStatus("channel_closing");
+    },
+    [sessionPrivateKey, address],
+  );
+
   // 自動清理
   useEffect(() => {
     return () => disconnectWs();
@@ -546,6 +745,7 @@ export function useNitrolite() {
     ytestUsdBalance,
     ytestUsdToken,
     channelId: channelData?.channelId || null,
+    channels,
 
     connectWs,
     disconnectWs,
@@ -556,9 +756,13 @@ export function useNitrolite() {
     resizeChannel,
     submitResize,
     createTransfer,
-    closeChannel,
-    getChannels,
+    sendCloseChannelMsgToWS,
+    submitClose,
+    withdrawFunds,
+    getChannels: sendGetChannelsMsgToWS,
+    getChannelData,
     getAssets,
+    checkAndCompletePendingResize,
 
     sendTip,
   };
