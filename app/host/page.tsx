@@ -7,6 +7,7 @@ import { useHostStream } from '@/hooks/useHostStream'
 import ProfileSetupForm from '@/components/host/ProfileSetupForm'
 import StreamControlPanel from '@/components/host/StreamControlPanel'
 import HostDashboard from '@/components/host/HostDashboard'
+import PageHeader from '@/components/PageHeader'
 
 export default function HostPage() {
   const { address, isConnected } = useAccount()
@@ -16,34 +17,28 @@ export default function HostPage() {
 
   return (
     <main className="mx-auto grid max-w-6xl gap-4 p-6">
-      {/* Header */}
-      <div className="panel flex items-center justify-between p-4">
-        <div className="grid gap-1">
-          <div className="text-xs tracking-widest text-white/60">HOST DASHBOARD</div>
-          <h1 className="text-lg font-extrabold">
-            {profile?.display_name ?? 'Tipping Live'}
-          </h1>
-        </div>
-        <ConnectButton />
-      </div>
+      <PageHeader
+        eyebrow="HOST DASHBOARD"
+        title={profile?.display_name ?? 'Tipping Live'}
+        rightSlot={<ConnectButton />}
+      />
 
-      {/* State machine */}
       {!isConnected ? (
-        <div className="panel mx-auto max-w-md p-8 text-center">
-          <h2 className="text-lg font-extrabold">Connect Your Wallet</h2>
-          <p className="mt-2 text-sm text-white/60">
+        <div className="mx-auto max-w-md rounded-2xl border border-border bg-panel shadow-panel backdrop-blur p-8 text-center">
+          <h2 className="text-lg font-extrabold text-text">Connect Your Wallet</h2>
+          <p className="mt-2 text-sm text-muted">
             Connect a wallet to set up your profile and start streaming.
           </p>
         </div>
       ) : isLoadingProfile ? (
-        <div className="panel mx-auto max-w-md p-8 text-center">
-          <div className="text-sm text-white/60">Loading profile...</div>
+        <div className="mx-auto max-w-md rounded-2xl border border-border bg-panel shadow-panel backdrop-blur p-8 text-center">
+          <div className="text-sm text-muted">Loading profile...</div>
         </div>
       ) : !profile ? (
         <ProfileSetupForm wallet={wallet!} onSaved={() => refetchProfile()} />
       ) : liveStream.isLoading ? (
-        <div className="panel mx-auto max-w-md p-8 text-center">
-          <div className="text-sm text-white/60">Checking stream status...</div>
+        <div className="mx-auto max-w-md rounded-2xl border border-border bg-panel shadow-panel backdrop-blur p-8 text-center">
+          <div className="text-sm text-muted">Checking stream status...</div>
         </div>
       ) : liveStream.data ? (
         <HostDashboard
