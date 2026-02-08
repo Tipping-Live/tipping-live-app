@@ -5,23 +5,23 @@ export default function Badge({
   value,
   tone = "neutral",
 }: {
-  label: string;
+  label?: string;
   value: string;
   tone?: "neutral" | "danger" | "success";
 }) {
   const toneClass =
     tone === "danger"
-      ? "border-red-500/30 bg-red-500/10 text-red-200"
+      ? "border-danger/25 bg-danger/10 text-danger"
       : tone === "success"
-      ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-200"
-      : "border-white/10 bg-white/5 text-white/80";
+      ? "border-success/25 bg-success/10 text-success"
+      : "border-border bg-white/60 text-text";
 
   return (
     <span
-      className={`inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-xs ${toneClass}`}
+      className={`inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-xs shadow-sm backdrop-blur ${toneClass}`}
     >
-      <span className="text-white/60">{label}</span>
-      <span className="font-semibold">{value}</span>
+      {!!label && <span className="text-muted">{label}</span>}
+      <span className="font-semibold tracking-wide">{value}</span>
     </span>
   );
 }

@@ -3,7 +3,7 @@ import Providers from './providers';
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: 'Yellow Tips MVP',
+  title: 'EveryAid App',
   description: 'Live tipping MVP with Yellow Nitrolite + wagmi',
 };
 

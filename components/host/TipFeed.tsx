@@ -24,7 +24,7 @@ function truncateAddress(addr: string) {
 export default function TipFeed({ tips }: Props) {
   if (tips.length === 0) {
     return (
-      <div className="py-8 text-center text-sm text-white/40">
+      <div className="py-8 text-center text-sm text-subtle">
         No tips yet. Share your viewer link to start receiving tips!
       </div>
     )
@@ -37,19 +37,28 @@ export default function TipFeed({ tips }: Props) {
           const from = tip.from_address || tip.fromAccount || 'unknown'
           const tokenLabel = tip.token || tip.asset || ''
           const time = tip.created_at || tip.createdAt
+
           return (
-            <div key={tip.id} className="flex items-center justify-between rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2">
+            <div
+              key={tip.id}
+              className="flex items-center justify-between gap-3 rounded-xl border border-border bg-panel2 px-3 py-2 shadow-sm"
+            >
               <div className="min-w-0">
-                <div className="text-sm font-semibold text-white/90">
-                  {tip.amount} <span className="text-white/60">{tokenLabel}</span>
+                <div className="text-sm font-semibold text-text">
+                  {tip.amount}{' '}
+                  <span className="font-semibold text-muted">{tokenLabel}</span>
                 </div>
-                <div className="text-xs text-white/40">
+
+                <div className="text-xs text-subtle">
                   from {truncateAddress(from)}
-                  {tip.memo && <span className="ml-2 text-white/50">&ldquo;{tip.memo}&rdquo;</span>}
+                  {tip.memo && (
+                    <span className="ml-2 text-muted">&ldquo;{tip.memo}&rdquo;</span>
+                  )}
                 </div>
               </div>
+
               {time && (
-                <div className="text-xs text-white/30">
+                <div className="shrink-0 text-xs text-subtle">
                   {new Date(time).toLocaleTimeString()}
                 </div>
               )}
