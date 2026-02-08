@@ -18,9 +18,13 @@ interface Props {
   tips: TipItem[]
   totals: Record<string, number>
   count: number
+  onClaim?: () => void
+  isClaiming?: boolean
+  claimStatus?: 'idle' | 'fetching' | 'closing' | 'closed' | 'error'
+  balance?: string | null
 }
 
-export default function TipsDashboard({ tips, totals, count }: Props) {
+export default function TipsDashboard({ tips, totals, count, onClaim, isClaiming, claimStatus, balance }: Props) {
   const totalDisplay =
     Object.entries(totals)
       .map(([token, amount]) => `${amount} ${token}`)
@@ -36,6 +40,9 @@ export default function TipsDashboard({ tips, totals, count }: Props) {
         <div>
           <div className="text-xs text-muted">Total</div>
           <div className="mt-1 text-xl font-extrabold text-text">{totalDisplay}</div>
+          {balance && (
+            <div className="mt-0.5 text-xs text-muted">ClearNode: {balance} ytest.usd</div>
+          )}
         </div>
         <div>
           <div className="text-xs text-muted">Count</div>
@@ -44,12 +51,25 @@ export default function TipsDashboard({ tips, totals, count }: Props) {
       </div>
 
       <div className="p-4">
-        <button
-          className="w-full rounded-xl border border-border bg-panel2 px-4 py-2 text-sm font-semibold text-muted shadow-sm"
-          disabled
-        >
-          Claim Tips (Coming Soon)
-        </button>
+        {isClaiming || claimStatus === 'closed' ? (
+          <button
+            className="w-full rounded-xl border border-border bg-panel2 px-4 py-2 text-sm font-semibold text-muted shadow-sm"
+            disabled
+          >
+            {claimStatus === 'closed' ? 'Claimed!' : 'Claiming...'}
+          </button>
+        ) : (
+          <button
+            className="btn-primary w-full"
+            disabled={!onClaim}
+            onClick={onClaim}
+          >
+            Claim Tips
+          </button>
+        )}
+        {claimStatus === 'error' && (
+          <div className="mt-1 text-xs text-red-400">Claim failed. Try again.</div>
+        )}
       </div>
 
       <div className="border-t border-border p-4">

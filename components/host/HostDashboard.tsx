@@ -129,6 +129,11 @@ export default function HostDashboard({ stream, wallet, onEndStream, isEnding }:
     return result
   }, [mergedTips, dbTips?.totals])
 
+  // Claim tips: close channels to settle funds on-chain
+  const handleClaimTips = useCallback(() => {
+    nitro.claimAll().catch((err) => console.error('Claim failed:', err))
+  }, [nitro.claimAll])
+
   const handleEndStream = useCallback(() => {
     webrtcHost.cleanup()
     media.stopCapture()
@@ -158,6 +163,10 @@ export default function HostDashboard({ stream, wallet, onEndStream, isEnding }:
           tips={mergedTips}
           totals={totals}
           count={mergedTips.length}
+          onClaim={handleClaimTips}
+          isClaiming={nitro.claimStatus === 'fetching' || nitro.claimStatus === 'closing'}
+          claimStatus={nitro.claimStatus}
+          balance={nitro.ytestUsdBalance}
         />
       </div>
     </div>
