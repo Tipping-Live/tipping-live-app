@@ -513,6 +513,14 @@ export function useNitrolite() {
     [address],
   );
 
+  const getChannelData = useCallback(
+    async (channelId: `0x${string}`) => {
+      if (!nitroliteDeps) throw new Error("Nitrolite client not ready");
+      return await nitroliteDeps.client.getChannelData(channelId);
+    },
+    [nitroliteDeps],
+  );
+
   // Get assets
   const getAssets = useCallback(async (chainId?: number) => {
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN)
