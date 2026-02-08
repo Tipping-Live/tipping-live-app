@@ -4,12 +4,14 @@ import { type RefObject } from 'react'
 import VideoPlayer from '@/components/VideoPlayer'
 import type { ViewerConnectionState } from '@/hooks/useWebRTCViewer'
 import Badge from '@/components/ui/Badge'
+import EnsName from '@/components/ui/EnsName'
 
 interface Props {
   videoRef: RefObject<HTMLVideoElement | null>
   connectionState: ViewerConnectionState
   streamTitle?: string
   streamerName?: string
+  streamerAddress?: string
   isMuted?: boolean
   onUnmute?: () => void
 }
@@ -75,6 +77,7 @@ export default function LiveStream({
   connectionState,
   streamTitle,
   streamerName,
+  streamerAddress,
   isMuted,
   onUnmute,
 }: Props) {
@@ -86,7 +89,15 @@ export default function LiveStream({
         <div className='min-w-0'>
           <div className='text-xs tracking-widest text-muted'>LIVE</div>
           <h2 className='truncate text-lg font-extrabold text-text'>{streamTitle || 'Stream'}</h2>
-          {streamerName && <div className='mt-0.5 text-xs text-subtle'>{streamerName}</div>}
+          {(streamerName || streamerAddress) && (
+            <div className='mt-0.5 text-xs text-subtle'>
+              {streamerAddress ? (
+                <EnsName address={streamerAddress} displayName={streamerName} />
+              ) : (
+                streamerName
+              )}
+            </div>
+          )}
 
           <div className='mt-2 flex flex-wrap items-center gap-2'>
             <span className='inline-flex items-center gap-2 rounded-full border border-border bg-white/60 px-2.5 py-1 text-xs text-text shadow-sm backdrop-blur'>

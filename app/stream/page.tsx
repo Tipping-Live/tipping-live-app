@@ -49,6 +49,7 @@ function StreamPageContent() {
             connectionState={connectionState}
             streamTitle={streamInfo?.title}
             streamerName={streamInfo?.streamer?.name}
+            streamerAddress={streamInfo?.streamer?.address}
             isMuted={isMuted}
             onUnmute={unmute}
           />

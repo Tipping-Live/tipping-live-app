@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import type { ChatMessage } from '@/hooks/useStreamChat'
+import EnsName from '@/components/ui/EnsName'
 
 interface Props {
   messages: ChatMessage[];
@@ -67,7 +68,11 @@ export default function ChatPanel({
                   isMe ? 'text-accent' : 'text-info'
                 }`}
               >
-                {msg.senderName}
+                {msg.senderAddress ? (
+                  <EnsName address={msg.senderAddress} fallbackLength={8} />
+                ) : (
+                  msg.senderName
+                )}
               </span>{' '}
               <span className='text-muted'>{msg.text}</span>
             </div>

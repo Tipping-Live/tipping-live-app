@@ -2,11 +2,13 @@
 
 import Link from 'next/link'
 import Badge from '@/components/ui/Badge'
+import EnsName from '@/components/ui/EnsName'
 
 interface StreamCardProps {
   id: string
   title: string
   streamerName: string
+  streamerAddress?: string
   streamerAvatar?: string | null
   startedAt: string
 }
@@ -20,7 +22,7 @@ function getElapsed(startedAt: string): string {
   return `${hrs}h ${mins % 60}m ago`
 }
 
-export default function StreamCard({ id, title, streamerName, streamerAvatar, startedAt }: StreamCardProps) {
+export default function StreamCard({ id, title, streamerName, streamerAddress, streamerAvatar, startedAt }: StreamCardProps) {
   const elapsed = getElapsed(startedAt)
 
   return (
@@ -51,7 +53,13 @@ export default function StreamCard({ id, title, streamerName, streamerAvatar, st
               )}
             </div>
 
-            <span className="text-xs text-muted truncate">{streamerName}</span>
+            <span className="text-xs text-muted truncate">
+              {streamerAddress ? (
+                <EnsName address={streamerAddress} displayName={streamerName} />
+              ) : (
+                streamerName
+              )}
+            </span>
           </div>
 
           <Badge label="" value="LIVE" tone="success" />

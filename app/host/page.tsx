@@ -8,6 +8,7 @@ import ProfileSetupForm from '@/components/host/ProfileSetupForm'
 import StreamControlPanel from '@/components/host/StreamControlPanel'
 import HostDashboard from '@/components/host/HostDashboard'
 import PageHeader from '@/components/PageHeader'
+import EnsName from '@/components/ui/EnsName'
 
 export default function HostPage() {
   const { address, isConnected } = useAccount()
@@ -22,6 +23,12 @@ export default function HostPage() {
         title={profile?.display_name ?? 'Tipping Live'}
         rightSlot={<ConnectButton />}
       />
+
+      {profile && wallet && (
+        <div className="text-xs text-subtle">
+          <EnsName address={wallet} displayName={profile.display_name} />
+        </div>
+      )}
 
       {!isConnected ? (
         <div className="mx-auto max-w-md rounded-2xl border border-border bg-panel shadow-panel backdrop-blur p-8 text-center">

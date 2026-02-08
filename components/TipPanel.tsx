@@ -8,6 +8,7 @@ import Button from "@/components/ui/Button";
 import Field from "@/components/ui/Field";
 import { useNitrolite } from "@/lib/nitrolite/useNitrolite";
 import { useAccount } from "wagmi";
+import EnsName from "@/components/ui/EnsName";
 
 export default function TipPanel() {
   const { isConnected, address } = useAccount();
@@ -261,6 +262,16 @@ export default function TipPanel() {
                 placeholder="1"
               />
             </div>
+
+            {streamerInfo?.streamer?.address && (
+              <div className="text-sm text-muted">
+                Sending to:{" "}
+                <EnsName
+                  address={streamerInfo.streamer.address}
+                  displayName={streamerInfo.streamer.name}
+                />
+              </div>
+            )}
 
             <Field
               label="Streamer Address"
