@@ -12,23 +12,23 @@ export default function StreamControlPanel({ onGoLive, isPending }: Props) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    onGoLive(title.trim() || 'Untitled Stream')
+    onGoLive(title.trim() || 'Untitled Broadcast')
   }
 
   return (
     <div className="mx-auto max-w-md rounded-2xl border border-border bg-panel shadow-panel backdrop-blur p-6">
-      <h2 className="text-lg font-extrabold text-text">Start a Live Stream</h2>
+      <h2 className="text-lg font-extrabold text-text">Start a Live Broadcast</h2>
       <p className="mt-1 text-sm text-muted">
-        Set a title and go live to start receiving tips.
+        Describe the situation and go live to receive instant support from around the world.
       </p>
 
       <form onSubmit={handleSubmit} className="mt-4 grid gap-4">
         <div>
-          <label className="text-xs text-muted">Stream Title</label>
+          <label className="text-xs text-muted">Broadcast Title</label>
           <input
             className="mt-1 w-full rounded-xl border border-border bg-panel2 px-3 py-2 text-sm text-text shadow-sm outline-none
                        placeholder:text-subtle focus:border-border2 focus:ring-2 focus:ring-ring"
-            placeholder="What are you streaming today?"
+            placeholder="Describe the situation or needs"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />

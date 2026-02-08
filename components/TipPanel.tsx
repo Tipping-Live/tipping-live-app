@@ -13,7 +13,7 @@ import EnsName from "@/components/ui/EnsName";
 export default function TipPanel() {
   const { isConnected, address } = useAccount();
   const [amount, setAmount] = useState("1");
-  const [memo, setMemo] = useState("Nice stream!");
+  const [memo, setMemo] = useState("Stay strong!");
   const [isRequestingTokens, setIsRequestingTokens] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [sendSuccess, setSendSuccess] = useState(false);
@@ -190,7 +190,7 @@ export default function TipPanel() {
     if (!isConnected) return "Wallet is not connected.";
     if (nitro.status === "error") return nitro.lastError || "Connection error";
     if (isInsufficientBalance && selectedToken)
-      return `Insufficient ${selectedToken.symbol} balance to send tip.`;
+      return `Insufficient ${selectedToken.symbol} balance to send donation.`;
     return null;
   }, [isConnected, nitro.status, nitro.lastError, isInsufficientBalance, selectedToken]);
 
@@ -198,7 +198,7 @@ export default function TipPanel() {
     <div className="panel overflow-hidden">
       <div className="flex flex-col gap-4 p-4 md:flex-row md:items-center md:justify-between">
         <div className="grid gap-2">
-          <div className="text-sm font-extrabold">Tipping</div>
+          <div className="text-sm font-extrabold">Donate</div>
           {balance && (
             <div className="text-xs text-white/60">
               ClearNode Balance: {balance} ytest.usd
@@ -214,7 +214,7 @@ export default function TipPanel() {
         {nitro.status === "idle" && isConnected && (
           <div className="flex flex-col items-center gap-3 py-4">
             <p className="text-sm text-white/60">
-              Connect to Yellow Network to send tips
+              Connect to Yellow Network to send donations
             </p>
             <Button onClick={handleConnect} disabled={!nitro.canWork}>
               Connect
@@ -241,7 +241,7 @@ export default function TipPanel() {
         {/* Success feedback */}
         {sendSuccess && (
           <div className="rounded-lg bg-green-500/10 border border-green-500/25 p-3 text-center text-sm text-green-400">
-            Tip sent successfully!
+            Donation sent successfully!
           </div>
         )}
 
@@ -274,7 +274,7 @@ export default function TipPanel() {
             )}
 
             <Field
-              label="Streamer Address"
+              label="Recipient Address"
               value={streamerInfo?.streamer?.address || ""}
               placeholder="0x..."
               readOnly
@@ -282,7 +282,7 @@ export default function TipPanel() {
 
             {selectedToken && (
               <TokenSelector
-                label="Tip Token"
+                label="Token"
                 options={tokenOptions}
                 value={selectedToken}
                 onChange={setSelectedToken}
@@ -293,7 +293,7 @@ export default function TipPanel() {
               label="Memo"
               value={memo}
               onChange={setMemo}
-              placeholder="Nice stream!"
+              placeholder="Leave a message of support"
             />
 
             <div className="flex flex-col items-start justify-between gap-3 md:flex-row md:items-center">
@@ -312,7 +312,7 @@ export default function TipPanel() {
                   disabled={!sendTipButtonEnabled}
                   onClick={handleSendTip}
                 >
-                  {isSending ? "Sending..." : "Send Tip"}
+                  {isSending ? "Sending..." : "Send Donation"}
                 </Button>
               </div>
             </div>
@@ -333,7 +333,7 @@ export default function TipPanel() {
         {!isConnected && (
           <div className="flex items-center justify-center py-6">
             <p className="text-sm text-white/60">
-              Connect your wallet to send tips
+              Connect your wallet to send donations
             </p>
           </div>
         )}

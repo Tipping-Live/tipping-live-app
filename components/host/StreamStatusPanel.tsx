@@ -64,14 +64,14 @@ export default function StreamStatusPanel({
       {/* Content */}
       <div className="grid gap-4 p-4">
         <div>
-          <div className="text-xs text-muted">Stream ID</div>
+          <div className="text-xs text-muted">Broadcast ID</div>
           <div className="mt-1 truncate text-xs font-mono text-text">
             {stream.id}
           </div>
         </div>
 
         <div>
-          <div className="text-xs text-muted">Viewer Link</div>
+          <div className="text-xs text-muted">Share Link</div>
           <div className="mt-1 flex items-center gap-2">
             <input
               className="flex-1 rounded-xl border border-border bg-panel2 px-3 py-2 text-xs text-text shadow-sm outline-none"
@@ -100,7 +100,7 @@ export default function StreamStatusPanel({
           onClick={onEndStream}
           disabled={isEnding}
         >
-          {isEnding ? 'Ending...' : 'End Stream'}
+          {isEnding ? 'Ending...' : 'End Broadcast'}
         </button>
       </div>
     </div>

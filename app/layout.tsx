@@ -4,7 +4,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: 'EveryAid App',
-  description: 'Live tipping MVP with Yellow Nitrolite + wagmi',
+  description: 'Instant disaster relief through live broadcasting and zero-fee donations',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

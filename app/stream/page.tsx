@@ -72,7 +72,7 @@ function StreamPageContent() {
                 fallback={
                   <div className="p-4">
                     <div className="text-sm font-extrabold text-text">
-                      Tipping
+                      Donate
                     </div>
                     <div className="mt-2 text-xs text-muted">
                       Loading…

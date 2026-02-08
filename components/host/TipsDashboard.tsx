@@ -33,7 +33,7 @@ export default function TipsDashboard({ tips, totals, count, onClaim, isClaiming
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-panel shadow-panel backdrop-blur">
       <div className="border-b border-border p-4">
-        <div className="text-sm font-extrabold text-text">Tips Received</div>
+        <div className="text-sm font-extrabold text-text">Donations Received</div>
       </div>
 
       <div className="grid grid-cols-2 gap-4 border-b border-border p-4">
@@ -64,7 +64,7 @@ export default function TipsDashboard({ tips, totals, count, onClaim, isClaiming
             disabled={!onClaim}
             onClick={onClaim}
           >
-            Claim Tips
+            Claim Donations
           </button>
         )}
         {claimStatus === 'error' && (
@@ -73,7 +73,7 @@ export default function TipsDashboard({ tips, totals, count, onClaim, isClaiming
       </div>
 
       <div className="border-t border-border p-4">
-        <div className="mb-2 text-xs text-muted">Recent Tips</div>
+        <div className="mb-2 text-xs text-muted">Recent Donations</div>
         <TipFeed tips={tips} />
       </div>
     </div>

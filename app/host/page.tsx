@@ -19,8 +19,8 @@ export default function HostPage() {
   return (
     <main className="mx-auto grid max-w-6xl gap-4 p-6">
       <PageHeader
-        eyebrow="HOST DASHBOARD"
-        title={profile?.display_name ?? 'Tipping Live'}
+        eyebrow="BROADCASTER DASHBOARD"
+        title={profile?.display_name ?? 'EveryAid'}
         rightSlot={<ConnectButton />}
       />
 
@@ -34,7 +34,7 @@ export default function HostPage() {
         <div className="mx-auto max-w-md rounded-2xl border border-border bg-panel shadow-panel backdrop-blur p-8 text-center">
           <h2 className="text-lg font-extrabold text-text">Connect Your Wallet</h2>
           <p className="mt-2 text-sm text-muted">
-            Connect a wallet to set up your profile and start streaming.
+            Connect a wallet to set up your digital identity and start broadcasting.
           </p>
         </div>
       ) : isLoadingProfile ? (

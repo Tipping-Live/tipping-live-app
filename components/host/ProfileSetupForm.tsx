@@ -22,7 +22,7 @@ export default function ProfileSetupForm({ wallet, onSaved }: Props) {
   return (
     <div className="mx-auto max-w-md rounded-2xl border border-border bg-panel shadow-panel backdrop-blur p-6">
       <h2 className="text-lg font-extrabold text-text">Set Up Your Profile</h2>
-      <p className="mt-1 text-sm text-muted">Choose a display name before going live.</p>
+      <p className="mt-1 text-sm text-muted">Choose a display name for your digital identity before going live.</p>
 
       <form onSubmit={handleSubmit} className="mt-4 grid gap-4">
         <div>
@@ -30,7 +30,7 @@ export default function ProfileSetupForm({ wallet, onSaved }: Props) {
           <input
             className="mt-1 w-full rounded-xl border border-border bg-panel2 px-3 py-2 text-sm text-text shadow-sm outline-none
                        placeholder:text-subtle focus:border-border2 focus:ring-2 focus:ring-ring"
-            placeholder="Your streamer name"
+            placeholder="Your display name"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
             required

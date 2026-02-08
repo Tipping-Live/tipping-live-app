@@ -10,7 +10,7 @@ export default function BrowsePage() {
   return (
     <main className="mx-auto grid max-w-6xl gap-4 p-6">
       {/* Header */}
-      <PageHeader eyebrow="EveryAid - BROWSE" title="Live Streams" />
+      <PageHeader eyebrow="EveryAid - BROWSE" title="Live Broadcasts" />
 
       {/* Content */}
       {isLoading ? (
@@ -24,35 +24,35 @@ export default function BrowsePage() {
       ) : !streams || streams.length === 0 ? (
         <>
           <div className="mx-auto max-w-md rounded-2xl border border-border bg-panel shadow-panel backdrop-blur p-8 text-center">
-            <h2 className="text-lg font-extrabold text-text">No Live Streams</h2>
+            <h2 className="text-lg font-extrabold text-text">No Live Broadcasts</h2>
             <p className="mt-2 text-sm text-muted">
-              No one is streaming right now. Check back later!
+              No one is broadcasting right now. Check back soon for live updates from the field.
             </p>
           </div>
 
           {/* Demo cards showcasing ENS resolution with real addresses */}
           <div className="mt-2">
             <p className="mb-3 text-center text-xs font-semibold uppercase tracking-widest text-subtle">
-              Demo Streams — ENS Resolution
+              Demo Broadcasts — Digital Identity Preview
             </p>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <StreamCard
                 id="demo-1"
-                title="Building the Future of Ethereum"
+                title="Emergency Relief Update — Eastern Region"
                 streamerName="Vitalik"
                 streamerAddress="0xd8da6bf26964af9d7eed9e03e53415d37aa96045"
                 startedAt={new Date(Date.now() - 42 * 60_000).toISOString()}
               />
               <StreamCard
                 id="demo-2"
-                title="ENS Deep Dive"
+                title="Shelter Supply Distribution — Day 3"
                 streamerName="Brantly"
                 streamerAddress="0x983110309620d911731ac0932219af06091b6744"
                 startedAt={new Date(Date.now() - 15 * 60_000).toISOString()}
               />
               <StreamCard
                 id="demo-3"
-                title="Web3 Identity Workshop"
+                title="Field Report — Clean Water Access"
                 streamerName="Nick"
                 streamerAddress="0x5555763613a12d8f3e73be831dff8598089d3dca"
                 startedAt={new Date(Date.now() - 5 * 60_000).toISOString()}

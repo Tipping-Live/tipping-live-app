@@ -23,13 +23,13 @@ export default function TipFeed({ tips }: Props) {
     return (
       <div>
         <div className="py-8 text-center text-sm text-subtle">
-          No tips yet. Share your viewer link to start receiving tips!
+          No donations yet. Share your broadcast link to start receiving support!
         </div>
 
         {/* Demo tip showcasing ENS resolution */}
         <div className="opacity-60">
           <p className="mb-2 text-center text-[10px] font-semibold uppercase tracking-widest text-subtle">
-            Demo — ENS Preview
+            Demo — Digital Identity Preview
           </p>
           <div className="flex items-center justify-between gap-3 rounded-xl border border-dashed border-border bg-panel2 px-3 py-2">
             <div className="min-w-0">
@@ -38,7 +38,7 @@ export default function TipFeed({ tips }: Props) {
               </div>
               <div className="text-xs text-subtle">
                 from <EnsName address="0xd8da6bf26964af9d7eed9e03e53415d37aa96045" fallbackLength={6} />
-                <span className="ml-2 text-muted">&ldquo;Great stream!&rdquo;</span>
+                <span className="ml-2 text-muted">&ldquo;Stay strong!&rdquo;</span>
               </div>
             </div>
             <span className="shrink-0 rounded-full bg-brand-soft px-2 py-0.5 text-[10px] font-bold text-muted">

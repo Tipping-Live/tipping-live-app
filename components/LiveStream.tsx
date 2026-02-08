@@ -33,7 +33,7 @@ function ConnectionOverlay({ state }: { state: ViewerConnectionState }) {
   if (state === 'connected') return null
 
   const content: Record<string, { icon: React.ReactNode; text: string }> = {
-    idle: { icon: <Spinner className='text-muted' />, text: 'Waiting for stream...' },
+    idle: { icon: <Spinner className='text-muted' />, text: 'Waiting for broadcast...' },
     connecting: { icon: <Spinner className='text-muted' />, text: 'Connecting...' },
     disconnected: { icon: <Spinner className='text-muted' />, text: 'Reconnecting...' },
     failed: {
@@ -58,7 +58,7 @@ function ConnectionOverlay({ state }: { state: ViewerConnectionState }) {
           />
         </svg>
       ),
-      text: 'Stream ended.',
+      text: 'Broadcast ended.',
     },
   };
 
@@ -88,7 +88,7 @@ export default function LiveStream({
       <div className='flex items-center justify-between gap-3 border-b border-border p-4'>
         <div className='min-w-0'>
           <div className='text-xs tracking-widest text-muted'>LIVE</div>
-          <h2 className='truncate text-lg font-extrabold text-text'>{streamTitle || 'Stream'}</h2>
+          <h2 className='truncate text-lg font-extrabold text-text'>{streamTitle || 'Broadcast'}</h2>
           {(streamerName || streamerAddress) && (
             <div className='mt-0.5 text-xs text-subtle'>
               {streamerAddress ? (

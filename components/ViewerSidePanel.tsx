@@ -7,7 +7,7 @@ interface Props {
   tipsContent: ReactNode
 }
 
-const tabs = ['Chat', 'Tips'] as const
+const tabs = ['Chat', 'Donate'] as const
 type Tab = (typeof tabs)[number]
 
 export default function ViewerSidePanel({ chatContent, tipsContent }: Props) {
@@ -41,7 +41,7 @@ export default function ViewerSidePanel({ chatContent, tipsContent }: Props) {
         <div className={activeTab === 'Chat' ? 'flex h-full flex-col' : 'hidden'}>
           {chatContent}
         </div>
-        <div className={activeTab === 'Tips' ? 'h-full overflow-y-auto' : 'hidden'}>
+        <div className={activeTab === 'Donate' ? 'h-full overflow-y-auto' : 'hidden'}>
           {tipsContent}
         </div>
       </div>
